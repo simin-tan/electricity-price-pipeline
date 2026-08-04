@@ -1,3 +1,4 @@
+import sys
 import time
 import datetime
 import requests
@@ -27,7 +28,11 @@ def fetch_day_ahead_prices(country: str, date: str) -> pd.DataFrame:
 
 if __name__ == "__main__":
     countries = ["DE-LU", "AT", "FR", "NL", "BE"]
-    date = datetime.date.today().isoformat()
+
+    if len(sys.argv) > 1:
+        date = sys.argv[1]
+    else:
+        date = datetime.date.today().isoformat()
 
     for country in countries:
         print(f"\n--- Fetching {country} for {date} ---")
