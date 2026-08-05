@@ -48,6 +48,15 @@ def optimize_battery(
         A_ub.append(-row)
         b_ub.append(soc0)
 
+    # End-of-day state of charge must be >= starting state of charge,
+    # so the battery can't just drain its initial reserve for free profit —
+    # it has to earn back any energy it discharges within the same day.
+    final_row = np.zeros(n)
+    final_row[:T] = eta_ch * interval_hours
+    final_row[T:] = -interval_hours / eta_dis
+    A_ub.append(-final_row)
+    b_ub.append(0)
+
     result = linprog(
         c_obj,
         A_ub=np.array(A_ub),
@@ -73,10 +82,18 @@ if __name__ == "__main__":
 
     prices = df["price_eur_mwh"].to_numpy()
 
+    # Battery specs matching a single Tesla Megapack 2 unit
+    # (3.9 MWh capacity, ~1 MW power, ~93.7% round-trip efficiency)
+    eta_round_trip = 0.937
+    eta_one_way = eta_round_trip ** 0.5   # split evenly between charge/discharge legs
+
     charge, discharge, profit = optimize_battery(
         prices,
-        capacity_mwh=1.0,      # 1 MWh battery
-        max_power_mw=0.5,      # can charge/discharge at 0.5 MW max
+        capacity_mwh=3.9,
+        max_power_mw=1.0,
+        eta_ch=eta_one_way,
+        eta_dis=eta_one_way,
+        soc0_fraction=0.0,   # start empty, nothing to discharge until battery has charged something
     )
 
     df["charge_mw"] = charge
@@ -86,7 +103,6 @@ if __name__ == "__main__":
     print(f"\nTotal profit: €{profit:.2f}")
     print(f"Hours charging: {(charge > 0.01).sum() * 0.25:.2f}h")
     print(f"Hours discharging: {(discharge > 0.01).sum() * 0.25:.2f}h")
-
 
     fig, ax1 = plt.subplots(figsize=(14, 5))
 
