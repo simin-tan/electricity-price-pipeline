@@ -28,8 +28,7 @@ python src/optimize.py # run battery optimization on a chosen day
 Battery schedule for Aug 4, 2026, using specs matching a single Tesla Megapack 2
 unit (3.9 MWh capacity, 1 MW power, ~93.7% round-trip efficiency). The battery
 starts empty and is constrained to end the day with at least as much charge as
-it started with, so the optimizer has to genuinely earn any energy it discharges
-rather than selling off a free starting reserve.
+it started with.
 
 ![Battery schedule example](data/processed/battery_schedule_2026-08-04.png)
 
