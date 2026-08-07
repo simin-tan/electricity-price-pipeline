@@ -5,25 +5,33 @@ bidding zones (DE-LU, AT, FR, NL, BE), via energy-charts.info. Runs daily via
 GitHub Actions, validates data quality, and commits results as Parquet files.
 
 Includes a battery storage optimizer that uses linear programming to find the
-profit-maximizing charge/discharge schedule against real historical prices.
+profit-maximizing charge/discharge schedule against real historical prices,
+backtested against a naive rule-based baseline. Core optimization logic is
+covered by unit tests that run automatically via CI on every push.
 
 ## Structure
 - `src/fetch.py` — pulls day-ahead prices from the API across 5 European bidding zones, with retry/backoff for rate limits
 - `src/transform.py` — DST-safe timestamp handling
 - `src/validate.py` — data quality checks (row count, price range, timestamp integrity)
 - `src/optimize.py` — battery charge/discharge optimization via `scipy.optimize.linprog`
+- `src/baseline.py` — naive rule-based strategy, used as a comparison baseline
 - `src/backtest.py` — runs the optimizer across all accumulated days, per country, and compares results
+- `tests/test_optimize.py` — unit tests for the optimizer's core logic
 - `data/processed/` — daily Parquet files, one per country per day
-- `.github/workflows/fetch_prices.yml` — daily automation (14:00 UTC + backup run)
+- `.github/workflows/fetch_prices.yml` — daily data fetch automation (14:00 UTC + backup run)
+- `.github/workflows/run_tests.yml` — runs the test suite on every push
 
 ## Setup
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
 python src/fetch.py # fetch today's prices for all countries
 python src/fetch.py 2026-08-03 # backfill a specific date
 python src/optimize.py # run battery optimization on a chosen day
 python src/backtest.py # run backtest across all countries and days
+python src/baseline.py # compare against naive strategy
+pytest tests/ -v # run the test suite
 
 ## Example output
 
@@ -44,7 +52,7 @@ discharge, yielding €488 theoretical profit for the day.
 - Ignores battery degradation costs, which would reduce real-world profitability
   over many charge/discharge cycles.
 - A production strategy would be backtested across many days and market
-  conditions before being trusted
+  conditions before being trusted.
 
 ## Multi-country comparison
 
@@ -85,4 +93,13 @@ curve the way a full-day optimization can.
 
 As of this writing, the automated daily fetch has run successfully via GitHub
 Actions' schedule for 3+ consecutive days without manual intervention, in
-addition to on-demand manual runs used for testing and backfilling.
+addition to on-demand manual runs used for testing and backfilling. A separate
+CI workflow runs the unit test suite on every push to catch regressions early.
+
+## Possible next steps
+
+- Rolling (day-by-day) backtest that only uses prices known at each point in
+  time, rather than optimizing full days in isolation
+- Battery degradation modeling for more realistic long-run profitability
+- Extend the naive-vs-optimizer comparison across more countries and a longer
+  time window as more data accumulates
