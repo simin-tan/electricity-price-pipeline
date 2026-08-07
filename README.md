@@ -22,16 +22,18 @@ covered by unit tests that run automatically via CI on every push.
 - `.github/workflows/run_tests.yml` — runs the test suite on every push
 
 ## Setup
+```
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-python src/fetch.py # fetch today's prices for all countries
-python src/fetch.py 2026-08-03 # backfill a specific date
-python src/optimize.py # run battery optimization on a chosen day
-python src/backtest.py # run backtest across all countries and days
-python src/baseline.py # compare against naive strategy
-pytest tests/ -v # run the test suite
+python src/fetch.py                 # fetch today's prices for all countries
+python src/fetch.py 2026-08-03      # backfill a specific date
+python src/optimize.py              # run battery optimization on a chosen day
+python src/backtest.py              # run backtest across all countries and days
+python src/baseline.py              # compare against naive strategy
+pytest tests/ -v                    # run the test suite
+```
 
 ## Example output
 
