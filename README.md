@@ -68,6 +68,19 @@ confirm this pattern holds over different seasons and weather conditions. As
 more days accumulate via the automated daily pipeline, this backtest will
 naturally cover more market conditions and become more statistically meaningful.
 
+## Optimization vs. naive strategy
+
+How much better is the LP optimizer than a simple rule-based approach
+("charge when price is in the bottom 25%, discharge when price is in the
+top 25%")? Comparing both strategies on DE-LU across the same 5 days:
+
+![Naive vs optimizer comparison](data/processed/naive_vs_optimizer.png)
+
+The LP optimizer beats the naive rule on every single day tested, averaging
+**9.1% higher profit**. The gap is largest on more volatile days, since a
+fixed-threshold rule can't adapt to the specific shape of each day's price
+curve the way a full-day optimization can.
+
 ## Pipeline reliability
 
 As of this writing, the automated daily fetch has run successfully via GitHub
