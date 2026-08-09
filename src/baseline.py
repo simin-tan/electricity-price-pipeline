@@ -69,6 +69,8 @@ if __name__ == "__main__":
         "2026-08-04": 488.31,
         "2026-08-05": 721.23,
         "2026-08-06": 626.80,
+        "2026-08-07": 610.06,
+        "2026-08-08": 694.94,
     }
     results_df["optimizer_profit_eur"] = results_df["date"].map(optimizer_profits)
 

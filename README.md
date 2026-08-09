@@ -62,13 +62,13 @@ Running the same backtest across all 5 tracked bidding zones (Aug 2-6, 2026):
 
 ![Multi-country backtest](data/processed/backtest_summary_all_countries.png)
 
-| Country | Avg. daily profit | Total (5 days) |
+| Country | Avg. daily profit | Total (7 days) |
 |---------|-------------------|-----------------|
-| DE-LU   | €626.64            | €3,133.21       |
-| NL      | €607.44            | €3,037.19       |
-| FR      | €554.95            | €2,774.76       |
-| AT      | €570.25            | €2,851.25       |
-| BE      | €532.92            | €2,664.58       |
+| DE-LU   | €634.03            | €4,438.21       |
+| NL      | €614.90            | €4,304.32       |
+| FR      | €578.91            | €4,052.39       |
+| AT      | €556.65            | €3,896.56       |
+| BE      | €549.74            | €3,848.15       |
 
 DE-LU shows the highest average arbitrage profit, plausibly reflecting Germany's
 high renewable energy share (wind/solar), which tends to produce more volatile
@@ -87,7 +87,7 @@ top 25%")? Comparing both strategies on DE-LU across the same 5 days:
 ![Naive vs optimizer comparison](data/processed/naive_vs_optimizer.png)
 
 The LP optimizer beats the naive rule on every single day tested, averaging
-**9.1% higher profit**. The gap is largest on more volatile days, since a
+**8.8% higher profit** across 7 days. The gap is largest on more volatile days, since a
 fixed-threshold rule can't adapt to the specific shape of each day's price
 curve the way a full-day optimization can.
 
