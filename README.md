@@ -58,7 +58,7 @@ discharge, yielding €488 theoretical profit for the day.
 
 ## Multi-country comparison
 
-Running the same backtest across all 5 tracked bidding zones (Aug 2-6, 2026):
+Running the same backtest across all 5 tracked bidding zones (Aug 2-8, 2026):
 
 ![Multi-country backtest](data/processed/backtest_summary_all_countries.png)
 
@@ -73,7 +73,7 @@ Running the same backtest across all 5 tracked bidding zones (Aug 2-6, 2026):
 DE-LU shows the highest average arbitrage profit, plausibly reflecting Germany's
 high renewable energy share (wind/solar), which tends to produce more volatile
 day-ahead prices — and more volatility means more opportunity for battery arbitrage.
-This is a small, early sample (5 days); a longer backtest would be needed to
+This is a small, early sample (7 days); a longer backtest would be needed to
 confirm this pattern holds over different seasons and weather conditions. As
 more days accumulate via the automated daily pipeline, this backtest will
 naturally cover more market conditions and become more statistically meaningful.
@@ -82,7 +82,7 @@ naturally cover more market conditions and become more statistically meaningful.
 
 How much better is the LP optimizer than a simple rule-based approach
 ("charge when price is in the bottom 25%, discharge when price is in the
-top 25%")? Comparing both strategies on DE-LU across the same 5 days:
+top 25%")? Comparing both strategies on DE-LU across the same 7 days:
 
 ![Naive vs optimizer comparison](data/processed/naive_vs_optimizer.png)
 
@@ -90,6 +90,24 @@ The LP optimizer beats the naive rule on every single day tested, averaging
 **8.8% higher profit** across 7 days. The gap is largest on more volatile days, since a
 fixed-threshold rule can't adapt to the specific shape of each day's price
 curve the way a full-day optimization can.
+
+## Limitation: single-day optimization horizon
+
+Carrying a battery's ending charge into the next day (rather than resetting
+to empty) was tested and found to have no effect on total profit. This is a
+structural consequence of optimizing each day independently: since all
+observed prices are positive and the model assigns no value to unsold charge
+at the end of the horizon, it is always optimal to sell down to zero charge
+by day's end, regardless of the starting level. This was confirmed with a
+constructed test case — a battery starting half-full, with a price spike
+limited to the first hour and low prices thereafter — in which the optimizer
+still liquidated to ~0 MWh rather than holding charge in reserve.
+
+Addressing this would require optimizing across multiple days within a
+single solve, allowing the model to value held charge against future prices
+rather than only those within the current day. This increases problem size
+and solve time as the horizon extends, and is a natural direction for
+further work.
 
 ## Pipeline reliability
 
@@ -100,8 +118,8 @@ CI workflow runs the unit test suite on every push to catch regressions early.
 
 ## Possible next steps
 
-- Rolling (day-by-day) backtest that only uses prices known at each point in
-  time, rather than optimizing full days in isolation
+- Multi-day (rather than single-day) optimization horizon, to allow the
+  model to value held charge against future prices
 - Battery degradation modeling for more realistic long-run profitability
 - Extend the naive-vs-optimizer comparison across more countries and a longer
   time window as more data accumulates
