@@ -48,14 +48,16 @@ def optimize_battery(
         A_ub.append(-row)
         b_ub.append(soc0)
 
-    # End-of-day state of charge must be >= starting state of charge,
-    # so the battery can't just drain its initial reserve for free profit —
-    # it has to earn back any energy it discharges within the same day.
-    final_row = np.zeros(n)
-    final_row[:T] = eta_ch * interval_hours
-    final_row[T:] = -interval_hours / eta_dis
-    A_ub.append(-final_row)
-    b_ub.append(0)
+    # NOTE: end-of-day floor constraint removed for multi-day chaining experiments.
+    # With this constraint active, the optimizer always drains back to exactly
+    # its starting SoC every day (since it has no incentive to save charge for
+    # a future it can't see), making day-to-day chaining meaningless.
+    #
+    # final_row = np.zeros(n)
+    # final_row[:T] = eta_ch * interval_hours
+    # final_row[T:] = -interval_hours / eta_dis
+    # A_ub.append(-final_row)
+    # b_ub.append(0)
 
     result = linprog(
         c_obj,
@@ -72,7 +74,12 @@ def optimize_battery(
     discharge = result.x[T:]
     profit = -result.fun
 
-    return charge, discharge, profit
+    # Compute ending state of charge, to allow chaining across multiple days
+    soc0 = soc0_fraction * capacity_mwh
+    net_energy = np.sum(charge * eta_ch * interval_hours) - np.sum(discharge * interval_hours / eta_dis)
+    ending_soc = soc0 + net_energy
+
+    return charge, discharge, profit, ending_soc
 
 
 if __name__ == "__main__":
@@ -87,7 +94,7 @@ if __name__ == "__main__":
     eta_round_trip = 0.937
     eta_one_way = eta_round_trip ** 0.5   # split evenly between charge/discharge legs
 
-    charge, discharge, profit = optimize_battery(
+    charge, discharge, profit, ending_soc = optimize_battery(
         prices,
         capacity_mwh=3.9,
         max_power_mw=1.0,
